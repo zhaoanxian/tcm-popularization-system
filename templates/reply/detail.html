@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+{% block page_title %}回复审核 {{ reply.reply_no }}{% endblock %}
+{% block page_desc %}学生4 ②③：审核、确认、状态流转 + 异常备注、附件上传、历史记录追踪{% endblock %}
+
+{% block content %}
+<div class="row g-3">
+    <div class="col-lg-8">
+        <div class="card mb-3">
+            <div class="card-header d-flex justify-content-between">
+                <span>回复内容</span>
+                <span class="badge bg-{{ reply.status_color }}">{{ reply.get_status_display }}</span>
+            </div>
+            <div class="card-body">
+                <div class="text-muted small mb-2">
+                    回复人：{{ reply.replier.username|default:'—' }} ·
+                    提交于 {{ reply.created_at|date:'Y-m-d H:i' }} ·
+                    所属咨询：
+                    <a href="{% url 'main_app:consult_detail' reply.consult.pk %}">
+                        {{ reply.consult.consult_no }} {{ reply.consult.title }}
+                    </a>
+                </div>
+                <div class="article-content">{{ reply.content|linebreaks }}</div>
+                {% if reply.is_exception %}
+                    <div class="alert alert-danger small mb-0">
+                        <strong>异常备注：</strong>{{ reply.exception_note }}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header"><i class="bi bi-clock-history"></i> 历史记录追踪（ReviewLog）</div>
+            <div class="card-body">
+                <ul class="timeline mb-0">
+                    {% for rv in reviews %}
+                        <li>
+                            <strong>{{ rv.get_action_display }}</strong>
+                            <span class="text-muted small">— {{ rv.operator.username|default:'系统' }} · {{ rv.created_at|date:'Y-m-d H:i:s' }}</span>
+                            {% if rv.comment %}<div class="small text-muted">意见：{{ rv.comment }}</div>{% endif %}
+                        </li>
+                    {% empty %}
+                        <li class="text-muted">暂无流转记录</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header"><i class="bi bi-paperclip"></i> 附件（{{ attachments|length }}）</div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush mb-3">
+                    {% for a in attachments %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                            <a href="{{ a.file.url }}" target="_blank">{{ a.original_name|default:a.file.name }}</a>
+                            <small class="text-muted">{{ a.uploaded_by.username|default:'—' }} · {{ a.uploaded_at|date:'m-d H:i' }}</small>
+                        </li>
+                    {% empty %}
+                        <li class="list-group-item px-0 text-muted small">暂无附件</li>
+                    {% endfor %}
+                </ul>
+                <form method="post" enctype="multipart/form-data" class="row g-2">
+                    {% csrf_token %}
+                    <input type="hidden" name="form_type" value="upload">
+                    <div class="col-md-8">{{ att_form.file }}</div>
+                    <div class="col-md-4"><button class="btn btn-outline-success w-100">上传附件</button></div>
+                </form>
+                <div class="form-text">支持图片、PDF 等，作为回复的辅助材料（如舌象照片、检查报告）。</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card mb-3">
+            <div class="card-header">审核操作</div>
+            <div class="card-body">
+                {% if can_review %}
+                    <form method="post" action="{% url 'main_app:reply_review' reply.pk %}">
+                        {% csrf_token %}
+                        <div class="mb-2">
+                            <label class="form-label small">审核意见</label>
+                            {{ review_form.comment }}
+                        </div>
+                        <div class="d-grid gap-2">
+                            {% if reply.status == 'submitted' %}
+                                <button class="btn btn-success" name="action" value="pass">
+                                    <i class="bi bi-check2-circle"></i> 审核通过
+                                </button>
+                                <button class="btn btn-outline-danger" name="action" value="reject">
+                                    <i class="bi bi-x-circle"></i> 驳回（须填意见）
+                                </button>
+                            {% elif reply.status == 'approved' %}
+                                <button class="btn btn-primary" name="action" value="publish">
+                                    <i class="bi bi-send"></i> 发布给用户
+                                </button>
+                            {% endif %}
+                            {% if reply.consult.status != 'closed' %}
+                                <button class="btn btn-outline-dark" name="action" value="close"
+                                        onclick="return confirm('确认结案？');">结案</button>
+                            {% else %}
+                                <button class="btn btn-outline-warning" name="action" value="reopen">退回处理</button>
+                            {% endif %}
+                        </div>
+                    </form>
+                {% else %}
+                    <p class="text-muted small mb-0">当前角色无审核权限（审核由「科普编辑 / 系统管理员」执行）。</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header">状态说明</div>
+            <div class="card-body small text-muted">
+                <p class="mb-1">草稿 → 待审核 → 审核通过 → 已发布</p>
+                <p class="mb-1">待审核 → 审核驳回 → 咨询退回「处理中」</p>
+                <p class="mb-0">每一次流转都会写入 ReviewLog，可追溯「谁在什么时候做了什么」。</p>
+            </div>
+        </div>
+
+        <a class="btn btn-outline-secondary w-100" href="{% url 'main_app:reply_task_list' %}">返回任务列表</a>
+    </div>
+</div>
+{% endblock %}

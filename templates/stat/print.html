@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block title %}{{ title }} · 打印{% endblock %}
+{% block page_title %}打印预览{% endblock %}
+{% block page_desc %}学生5 ③：可直接 Ctrl+P 打印或另存为 PDF{% endblock %}
+{% block page_actions %}
+    <button class="btn btn-success btn-sm no-print" onclick="window.print()">
+        <i class="bi bi-printer"></i> 打印本页
+    </button>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-body">
+        <div class="text-center mb-3">
+            <h5 class="mb-1">中医药科普内容与咨询管理系统</h5>
+            <h6 class="mb-1">{{ title }}</h6>
+            <small class="text-muted">打印时间：{{ now|date:'Y-m-d H:i:s' }} · 数据条数：{{ data|length }}</small>
+        </div>
+        <table class="table table-bordered table-sm">
+            <thead class="table-light">
+            <tr>{% for h in headers %}<th>{{ h }}</th>{% endfor %}</tr>
+            </thead>
+            <tbody>
+            {% for row in data %}
+                <tr>{% for cell in row %}<td>{{ cell }}</td>{% endfor %}</tr>
+            {% empty %}
+                <tr><td colspan="{{ headers|length }}" class="text-center text-muted">暂无数据</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        <div class="text-end small text-muted mt-4">
+            制表人：{{ user.username }}　　审核：____________　　日期：____________
+        </div>
+    </div>
+</div>
+{% endblock %}

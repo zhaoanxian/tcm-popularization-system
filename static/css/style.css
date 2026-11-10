@@ -1,0 +1,62 @@
+:root {
+    --tcm-green: #2f6b4f;
+    --tcm-green-light: #e8f3ee;
+    --tcm-gold: #b98b3c;
+}
+
+body {
+    background: #f6f8f7;
+    font-family: "Microsoft YaHei", "PingFang SC", "Helvetica Neue", sans-serif;
+    color: #24312b;
+}
+
+.tcm-navbar {
+    background: linear-gradient(90deg, var(--tcm-green), #3f8a63);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, .08);
+}
+.tcm-navbar .nav-link { color: rgba(255, 255, 255, .85); }
+.tcm-navbar .nav-link:hover, .tcm-navbar .nav-link.active {
+    color: #fff; border-bottom: 2px solid var(--tcm-gold);
+}
+
+.page-title { font-weight: 700; color: var(--tcm-green); border-left: 4px solid var(--tcm-gold); padding-left: 10px; }
+
+.card { border: none; box-shadow: 0 1px 4px rgba(20, 40, 30, .08); border-radius: .6rem; }
+.card-header { background: #fff; border-bottom: 1px solid #eef2f0; font-weight: 600; }
+
+.stat-card { border-left: 4px solid var(--tcm-green); }
+.stat-card .num { font-size: 1.8rem; font-weight: 700; color: var(--tcm-green); }
+.stat-card.gold { border-left-color: var(--tcm-gold); }
+.stat-card.gold .num { color: var(--tcm-gold); }
+
+.table > :not(caption) > * > * { padding: .55rem .6rem; }
+
+.badge-status { font-weight: 500; }
+
+.login-wrap {
+    min-height: 100vh; display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(135deg, #2f6b4f 0%, #6ba687 60%, #cfe3d8 100%);
+}
+.login-card { width: 420px; border-radius: 1rem; }
+.login-brand { font-size: 1.4rem; font-weight: 700; color: var(--tcm-green); }
+
+.article-content { line-height: 2; font-size: 1.02rem; }
+.article-content p { margin-bottom: 1rem; }
+
+.timeline { list-style: none; padding-left: 0; }
+.timeline li { border-left: 3px solid var(--tcm-green-light); padding: 0 0 14px 16px; position: relative; }
+.timeline li:before {
+    content: ''; width: 10px; height: 10px; border-radius: 50%;
+    background: var(--tcm-green); position: absolute; left: -6.5px; top: 4px;
+}
+.hero {
+    background: linear-gradient(120deg, #2f6b4f, #4f8f6d);
+    color: #fff; border-radius: .8rem; padding: 2.2rem;
+}
+
+/* 打印样式（学生5 ③ 打印页面） */
+@media print {
+    .tcm-navbar, footer, .no-print, .page_actions { display: none !important; }
+    body { background: #fff; }
+    .card { box-shadow: none; border: 1px solid #ddd; }
+}

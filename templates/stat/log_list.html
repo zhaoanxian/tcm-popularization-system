@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% block page_title %}操作日志{% endblock %}
+{% block page_desc %}学生5 ③：记录留痕查询、结果导出、打印（登录 / 新增 / 修改 / 审核 / 导出等全部动作）{% endblock %}
+{% block page_actions %}
+    <a class="btn btn-outline-success btn-sm" href="{% url 'main_app:export_csv' %}?target=log">
+        <i class="bi bi-download"></i> 导出日志 CSV
+    </a>
+    <a class="btn btn-outline-secondary btn-sm" target="_blank" href="{% url 'main_app:print_view' 'log' %}">
+        <i class="bi bi-printer"></i> 打印
+    </a>
+{% endblock %}
+
+{% block content %}
+<div class="card mb-3">
+    <div class="card-body">
+        <form class="row g-2" method="get">
+            <div class="col-md-3">
+                <input class="form-control" name="kw" value="{{ kw }}" placeholder="操作人 / 操作类型 / 说明">
+            </div>
+            <div class="col-md-2">
+                <select class="form-select" name="module">
+                    <option value="">全部模块</option>
+                    {% for v, l in modules %}
+                        <option value="{{ v }}" {% if module == v %}selected{% endif %}>{{ l }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2"><input type="date" class="form-control" name="start" value="{{ start }}"></div>
+            <div class="col-md-2"><input type="date" class="form-control" name="end" value="{{ end }}"></div>
+            <div class="col-md-2">
+                <button class="btn btn-success">查询</button>
+                <a class="btn btn-outline-secondary" href="{% url 'main_app:log_list' %}">重置</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-sm table-hover align-middle mb-0">
+            <thead class="table-light">
+            <tr><th>#</th><th>时间</th><th>操作人</th><th>模块</th><th>操作</th><th>对象</th>
+                <th>说明</th><th>IP</th><th>结果</th></tr>
+            </thead>
+            <tbody>
+            {% for l in page_obj %}
+                <tr>
+                    <td>{{ l.pk }}</td>
+                    <td class="text-nowrap small">{{ l.created_at|date:'Y-m-d H:i:s' }}</td>
+                    <td>{{ l.username|default:'匿名' }}</td>
+                    <td><span class="badge bg-light text-dark border">{{ l.get_module_display }}</span></td>
+                    <td>{{ l.action }}</td>
+                    <td><small class="text-muted">{{ l.object_type }}{% if l.object_id %}#{{ l.object_id }}{% endif %}</small></td>
+                    <td class="small">{{ l.detail }}</td>
+                    <td class="small text-muted">{{ l.ip }}</td>
+                    <td>
+                        {% if l.result == 'success' %}<span class="badge bg-success">成功</span>
+                        {% else %}<span class="badge bg-danger">失败</span>{% endif %}
+                    </td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="9" class="text-center text-muted py-4">暂无日志</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% include 'includes/pager.html' %}
+{% endblock %}

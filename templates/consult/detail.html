@@ -1,0 +1,152 @@
+{% extends 'base.html' %}
+{% block page_title %}咨询详情 {{ obj.consult_no }}{% endblock %}
+{% block page_desc %}学生3 ②③ + 学生4：明细、状态流转、回复与审核全过程留痕{% endblock %}
+
+{% block content %}
+<div class="row g-3">
+    <div class="col-lg-8">
+        <div class="card mb-3">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-chat-square-text"></i> 咨询内容</span>
+                <span class="badge bg-{{ obj.status_color }}">{{ obj.get_status_display }}</span>
+            </div>
+            <div class="card-body">
+                <h5>{{ obj.title }}</h5>
+                <div class="text-muted small mb-3">
+                    <code>{{ obj.consult_no }}</code> ·
+                    {{ obj.get_consult_type_display }} ·
+                    {% if obj.urgency == 3 %}<span class="text-danger">紧急</span>{% else %}{{ obj.get_urgency_display }}{% endif %} ·
+                    提问人 {{ obj.asker_name|default:obj.asker.username }}
+                    {% if obj.asker_gender %}（{{ obj.asker_gender }}{% if obj.asker_age %}/{{ obj.asker_age }}岁{% endif %}）{% endif %} ·
+                    提交于 {{ obj.created_at|date:'Y-m-d H:i' }}
+                </div>
+                <div class="article-content">{{ obj.content|linebreaks }}</div>
+                {% if obj.related_article %}
+                    <div class="alert alert-success-subtle mt-3 mb-0 small">
+                        <i class="bi bi-link-45deg"></i> 关联科普文章：
+                        <a href="{% url 'main_app:article_detail' obj.related_article.pk %}">{{ obj.related_article.title }}</a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- 回复列表 -->
+        <div class="card mb-3">
+            <div class="card-header"><i class="bi bi-reply-all"></i> 回复记录（{{ replies|length }}）</div>
+            <div class="card-body">
+                {% for r in replies %}
+                    <div class="border rounded p-3 mb-3">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <strong>{{ r.replier.username|default:'—' }}</strong>
+                                <code class="ms-2 small">{{ r.reply_no }}</code>
+                                <span class="badge bg-{{ r.status_color }} ms-1">{{ r.get_status_display }}</span>
+                                {% if r.is_exception %}<span class="badge bg-danger">异常</span>{% endif %}
+                            </div>
+                            <small class="text-muted">{{ r.created_at|date:'Y-m-d H:i' }}</small>
+                        </div>
+                        <div class="mt-2">{{ r.content|linebreaks }}</div>
+                        {% if r.is_exception %}
+                            <div class="alert alert-danger py-1 px-2 small mt-2 mb-0">
+                                异常说明：{{ r.exception_note }}
+                            </div>
+                        {% endif %}
+                        {% if r.attachments.all %}
+                            <div class="mt-2 small">
+                                <i class="bi bi-paperclip"></i> 附件：
+                                {% for a in r.attachments.all %}
+                                    <a href="{{ a.file.url }}" target="_blank">{{ a.original_name|default:a.file.name }}</a>{% if not forloop.last %}、{% endif %}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <div class="mt-2">
+                            <a class="btn btn-sm btn-outline-secondary" href="{% url 'main_app:reply_detail' r.pk %}">
+                                查看审核轨迹
+                            </a>
+                        </div>
+                    </div>
+                {% empty %}
+                    <p class="text-muted mb-0">暂无回复。{% if can_handle %}点击右侧「撰写回复」开始答复。{% endif %}</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        {% if is_owner %}
+        <div class="card">
+            <div class="card-header">我的咨询进度</div>
+            <div class="card-body">
+                <ul class="timeline mb-0">
+                    <li><strong>已提交</strong> —— {{ obj.created_at|date:'Y-m-d H:i' }}</li>
+                    <li><strong>{% if obj.status == 'pending' %}等待受理{% else %}医师已受理{% endif %}</strong>
+                        {% if obj.handler %} —— 受理人 {{ obj.handler.username }}{% endif %}</li>
+                    <li><strong>{% if obj.status == 'replied' or obj.status == 'closed' %}医师已回复{% else %}等待回复{% endif %}</strong></li>
+                    <li><strong>{% if obj.status == 'closed' %}已结案{% else %}处理中{% endif %}</strong>
+                        <span class="text-muted small">（最近更新 {{ obj.updated_at|date:'m-d H:i' }}）</span></li>
+                </ul>
+                <button class="btn btn-sm btn-outline-success" onclick="refreshStatus()">刷新状态</button>
+                <span id="statusTip" class="small text-muted ms-2"></span>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card mb-3">
+            <div class="card-header">状态与处理</div>
+            <div class="card-body">
+                <p class="mb-2">当前状态：<span class="badge bg-{{ obj.status_color }}">{{ obj.get_status_display }}</span></p>
+                <p class="mb-2 small">受理人：{{ obj.handler.username|default:'未分配' }}</p>
+                <p class="mb-3 small">更新时间：{{ obj.updated_at|date:'Y-m-d H:i' }}</p>
+
+                <div class="d-grid gap-2">
+                    {% if can_handle %}
+                        {% if obj.status == 'pending' %}
+                            <form method="post" action="{% url 'main_app:consult_claim' obj.pk %}">
+                                {% csrf_token %}
+                                <button class="btn btn-warning w-100">受理此咨询</button>
+                            </form>
+                        {% endif %}
+                        {% if obj.status != 'closed' %}
+                            <a class="btn btn-success" href="{% url 'main_app:reply_create' obj.pk %}">
+                                <i class="bi bi-pencil-square"></i> 撰写回复
+                            </a>
+                        {% endif %}
+                        <a class="btn btn-outline-secondary" href="{% url 'main_app:consult_edit' obj.pk %}">维护明细</a>
+                        {% if obj.status != 'closed' %}
+                            <form method="post" action="{% url 'main_app:consult_close' obj.pk %}"
+                                  onsubmit="return confirm('确认结案？结案后不可再回复。');">
+                                {% csrf_token %}
+                                <button class="btn btn-outline-dark w-100">结案</button>
+                            </form>
+                        {% endif %}
+                    {% else %}
+                        <span class="text-muted small">当前角色仅可查看，无处理权限。</span>
+                    {% endif %}
+                    <a class="btn btn-outline-secondary" href="{% url 'main_app:consult_list' %}">返回列表</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">业务闭环提示</div>
+            <div class="card-body small text-muted">
+                <p class="mb-1">① 科普文章 → ② 咨询问题 → ③ 回复（提交审核）→ ④ 编辑审核 → ⑤ 发布 → ⑥ 结案</p>
+                <p class="mb-0">全部动作写入 <code>OperationLog</code> 与 <code>ReviewLog</code>，可在「检索统计 / 操作日志」中追溯。</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function refreshStatus() {
+    fetch('/api/consult/status/?id={{ obj.pk }}')
+        .then(r => r.json())
+        .then(d => {
+            document.getElementById('statusTip').textContent =
+                '当前状态：' + d.status + '（更新于 ' + d.updated + '）';
+        });
+}
+</script>
+{% endblock %}

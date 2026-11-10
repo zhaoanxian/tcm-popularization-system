@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% block page_title %}个人中心{% endblock %}
+{% block page_desc %}学生1 ①：查看与修改个人资料、了解当前角色权限{% endblock %}
+
+{% block content %}
+<div class="row g-3">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">基本资料</div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">登录账号</label>
+                        <input class="form-control" value="{{ prof.user.username }}" disabled>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">真实姓名</label>
+                        <input class="form-control" name="real_name" value="{{ prof.real_name }}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">手机号</label>
+                        <input class="form-control" name="phone" value="{{ prof.phone }}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">邮箱</label>
+                        <input class="form-control" name="email" value="{{ prof.user.email }}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">所属科室（咨询医师填写）</label>
+                        <input class="form-control" name="department" value="{{ prof.department }}">
+                    </div>
+                    <button class="btn btn-success">保存修改</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card mb-3">
+            <div class="card-header">我的角色与权限</div>
+            <div class="card-body">
+                <p>当前角色：<span class="badge bg-success">{{ prof.get_role_display }}</span></p>
+                <ul class="list-group list-group-flush small">
+                    <li class="list-group-item d-flex justify-content-between">
+                        科普文章维护 <span>{% if prof.can_manage_article %}<i class="bi bi-check-circle text-success"></i> 可操作{% else %}<i class="bi bi-dash-circle text-muted"></i> 仅浏览{% endif %}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        咨询受理与回复 <span>{% if prof.can_manage_consult %}<i class="bi bi-check-circle text-success"></i> 可操作{% else %}<i class="bi bi-dash-circle text-muted"></i> 仅提问{% endif %}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        回复审核发布 <span>{% if prof.can_review %}<i class="bi bi-check-circle text-success"></i> 可操作{% else %}<i class="bi bi-dash-circle text-muted"></i> 无权限{% endif %}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        用户与权限配置 <span>{% if prof.is_admin %}<i class="bi bi-check-circle text-success"></i> 可操作{% else %}<i class="bi bi-dash-circle text-muted"></i> 无权限{% endif %}</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header">我的咨询</div>
+            <div class="card-body">
+                <a class="btn btn-outline-success btn-sm" href="{% url 'main_app:consult_list' %}">查看我的咨询列表</a>
+                <a class="btn btn-success btn-sm" href="{% url 'main_app:consult_create' %}">发起新咨询</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

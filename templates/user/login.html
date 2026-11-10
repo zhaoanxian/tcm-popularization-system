@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% block title %}登录 · 中医药科普内容与咨询管理系统{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <div class="col-lg-5">
+        <div class="card p-4">
+            <h5 class="mb-3"><i class="bi bi-box-arrow-in-right"></i> 账号登录</h5>
+            <form method="post" novalidate>
+                {% csrf_token %}
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+                {% endif %}
+                <div class="mb-3">
+                    <label class="form-label">{{ form.username.label }}</label>
+                    {{ form.username }}
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">{{ form.password.label }}</label>
+                    {{ form.password }}
+                </div>
+                <button class="btn btn-success w-100" type="submit">登 录</button>
+            </form>
+            <div class="text-center mt-3 small">
+                还没有账号？<a href="{% url 'main_app:register' %}">立即注册</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-7">
+        <div class="card p-4 h-100">
+            <h5 class="mb-3"><i class="bi bi-people"></i> 演示账号（密码统一 <code>tcm123456</code>）</h5>
+            <table class="table table-sm align-middle">
+                <thead><tr><th>账号</th><th>角色</th><th>可操作功能</th></tr></thead>
+                <tbody>
+                <tr><td><code>admin01</code></td><td><span class="badge bg-danger">系统管理员</span></td>
+                    <td>全部：用户/栏目/菜单权限、文章、咨询、审核、统计导出</td></tr>
+                <tr><td><code>editor01</code></td><td><span class="badge bg-primary">科普编辑</span></td>
+                    <td>文章增删改查、回复审核发布、统计与日志</td></tr>
+                <tr><td><code>doctor01</code></td><td><span class="badge bg-warning text-dark">咨询医师</span></td>
+                    <td>受理咨询、撰写回复、提交审核</td></tr>
+                <tr><td><code>user01</code></td><td><span class="badge bg-secondary">普通用户</span></td>
+                    <td>浏览科普、提交咨询、查看自己的回复</td></tr>
+                </tbody>
+            </table>
+            <p class="text-muted small mb-0">
+                <i class="bi bi-info-circle"></i>
+                同一套页面按角色渲染菜单：普通用户看不到后台入口，直接输入 URL 也会被权限装饰器拦截。
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

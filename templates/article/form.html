@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+{% block page_title %}{{ title }}{% endblock %}
+{% block page_desc %}学生2 ①②：科普文章新增与编辑（含校验：标题至少 4 字、栏目必选）{% endblock %}
+
+{% block content %}
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div class="row g-3">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">文章正文</div>
+                <div class="card-body">
+                    {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+                    <div class="mb-3">
+                        <label class="form-label">{{ form.title.label }} <span class="text-danger">*</span></label>
+                        {{ form.title }}
+                        {% for e in form.title.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">{{ form.subtitle.label }}</label>
+                        {{ form.subtitle }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">{{ form.summary.label }}</label>
+                        {{ form.summary }}
+                        <div class="form-text">一句话概括，用于列表页与搜索结果摘要（建议 40 字以内）。</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">{{ form.content.label }} <span class="text-danger">*</span></label>
+                        {{ form.content }}
+                        <div class="form-text">支持纯文本，段落间空一行自动分段。</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card mb-3">
+                <div class="card-header">分类与来源</div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">{{ form.category.label }} <span class="text-danger">*</span></label>
+                        {{ form.category }}
+                        {% for e in form.category.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">{{ form.tags.label }}</label>
+                        {{ form.tags }}
+                        <div class="form-text">按住 Ctrl / Cmd 多选。</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">{{ form.author.label }} <span class="text-danger">*</span></label>
+                        {{ form.author }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">{{ form.source.label }}</label>
+                        {{ form.source }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">{{ form.cover_image.label }}</label>
+                        {{ form.cover_image }}
+                        {% if obj.cover_image %}<div class="form-text">当前：{{ obj.cover_image.name }}</div>{% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header">发布设置</div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">{{ form.status.label }}</label>
+                        {{ form.status }}
+                    </div>
+                    <div class="form-check mb-3">
+                        {{ form.is_top }}
+                        <label class="form-check-label">{{ form.is_top.label }}</label>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-success" type="submit">
+                            <i class="bi bi-save"></i> 保存
+                        </button>
+                        <a class="btn btn-outline-secondary"
+                           href="{% if obj %}{% url 'main_app:article_detail' obj.pk %}{% else %}{% url 'main_app:article_list' %}{% endif %}">取消</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+{% endblock %}

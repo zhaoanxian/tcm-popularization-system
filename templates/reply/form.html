@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% block page_title %}撰写回复{% endblock %}
+{% block page_desc %}学生4 ①：回复提交后进入「待审核」，需编辑审核通过并发布后用户才可见{% endblock %}
+
+{% block content %}
+<div class="row g-3">
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-header">回复内容</div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+                    <div class="mb-3">
+                        <label class="form-label">回复正文 <span class="text-danger">*</span></label>
+                        {{ form.content }}
+                        {% for e in form.content.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+                    </div>
+                    <div class="form-check mb-2">
+                        {{ form.is_exception }}
+                        <label class="form-check-label" for="{{ form.is_exception.id_for_label }}">标记为异常 / 需线下就诊</label>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">{{ form.exception_note.label }}</label>
+                        {{ form.exception_note }}
+                        {% for e in form.exception_note.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+                    </div>
+                    <button class="btn btn-success">提交审核</button>
+                    <a class="btn btn-outline-secondary" href="{% url 'main_app:consult_detail' consult.pk %}">取消</a>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="card">
+            <div class="card-header">原咨询（{{ consult.consult_no }}）</div>
+            <div class="card-body">
+                <h6>{{ consult.title }}</h6>
+                <p class="small text-muted mb-2">
+                    {{ consult.get_consult_type_display }} ·
+                    {{ consult.asker_name|default:consult.asker.username }}
+                    {% if consult.asker_age %}· {{ consult.asker_age }} 岁{% endif %}
+                </p>
+                <div class="border rounded p-2 small" style="max-height:320px;overflow:auto">
+                    {{ consult.content|linebreaks }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

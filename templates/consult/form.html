@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% block page_title %}{% if obj %}维护咨询明细{% else %}发起咨询{% endif %}{% endblock %}
+{% block page_desc %}学生3 {% if obj %}②：维护明细数据（受理人 / 状态 / 内容修正）{% else %}①：创建咨询业务记录，自动生成咨询编号{% endif %}{% endblock %}
+
+{% block content %}
+<form method="post">
+    {% csrf_token %}
+    <div class="row g-3">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">咨询内容</div>
+                <div class="card-body">
+                    {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+                    <div class="mb-3">
+                        <label class="form-label">咨询标题 <span class="text-danger">*</span></label>
+                        {{ form.title }}
+                        {% for e in form.title.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">咨询类型</label>
+                            {{ form.consult_type }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">紧急程度</label>
+                            {{ form.urgency }}
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">咨询内容 <span class="text-danger">*</span></label>
+                        {{ form.content }}
+                        {% for e in form.content.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">关联科普文章</label>
+                        {{ form.related_article }}
+                        <div class="form-text">可关联你正在阅读的科普文章，便于医师结合上下文答复。</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card mb-3">
+                <div class="card-header">提问人信息</div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">姓名</label>
+                        {{ form.asker_name }}
+                    </div>
+                    <div class="row">
+                        <div class="col-6 mb-3">
+                            <label class="form-label">性别</label>
+                            {{ form.asker_gender }}
+                        </div>
+                        <div class="col-6 mb-3">
+                            <label class="form-label">年龄</label>
+                            {{ form.asker_age }}
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">联系方式</label>
+                        {{ form.contact }}
+                    </div>
+                </div>
+            </div>
+
+            {% if obj %}
+            <div class="card mb-3">
+                <div class="card-header">处理信息（医师/管理员）</div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">受理人</label>
+                        {{ form.handler }}
+                    </div>
+                    <div class="mb-0">
+                        <label class="form-label">状态</label>
+                        {{ form.status }}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="d-grid gap-2">
+                <button class="btn btn-success" type="submit">{% if obj %}保存明细{% else %}提交咨询{% endif %}</button>
+                <a class="btn btn-outline-secondary"
+                   href="{% if obj %}{% url 'main_app:consult_detail' obj.pk %}{% else %}{% url 'main_app:consult_list' %}{% endif %}">取消</a>
+            </div>
+        </div>
+    </div>
+</form>
+{% endblock %}

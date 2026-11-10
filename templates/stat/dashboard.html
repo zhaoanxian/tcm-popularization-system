@@ -1,0 +1,195 @@
+{% extends 'base.html' %}
+{% block page_title %}统计报表{% endblock %}
+{% block page_desc %}学生5 ②：Pandas 数据汇总 + ECharts 图表（趋势 / 分布 / 工作量 / 审核通过率）{% endblock %}
+{% block page_actions %}
+<form class="d-flex gap-2 no-print" method="get">
+    <select class="form-select form-select-sm" name="days" onchange="this.form.submit()">
+        <option value="7" {% if days == 7 %}selected{% endif %}>近 7 天</option>
+        <option value="14" {% if days == 14 %}selected{% endif %}>近 14 天</option>
+        <option value="30" {% if days == 30 %}selected{% endif %}>近 30 天</option>
+        <option value="90" {% if days == 90 %}selected{% endif %}>近 90 天</option>
+    </select>
+</form>
+{% endblock %}
+
+{% block content %}
+<div class="row g-3 mb-3">
+    <div class="col-6 col-lg-2">
+        <div class="card stat-card"><div class="card-body p-3">
+            <div class="text-muted small">科普文章</div><div class="num">{{ stats.article }}</div>
+        </div></div>
+    </div>
+    <div class="col-6 col-lg-2">
+        <div class="card stat-card"><div class="card-body p-3">
+            <div class="text-muted small">已发布</div><div class="num">{{ stats.published }}</div>
+        </div></div>
+    </div>
+    <div class="col-6 col-lg-2">
+        <div class="card stat-card"><div class="card-body p-3">
+            <div class="text-muted small">咨询总量</div><div class="num">{{ stats.consult }}</div>
+        </div></div>
+    </div>
+    <div class="col-6 col-lg-2">
+        <div class="card stat-card gold"><div class="card-body p-3">
+            <div class="text-muted small">待处理</div><div class="num">{{ stats.pending }}</div>
+        </div></div>
+    </div>
+    <div class="col-6 col-lg-2">
+        <div class="card stat-card gold"><div class="card-body p-3">
+            <div class="text-muted small">待审核回复</div><div class="num">{{ stats.reply_pending }}</div>
+        </div></div>
+    </div>
+    <div class="col-6 col-lg-2">
+        <div class="card stat-card"><div class="card-body p-3">
+            <div class="text-muted small">审核通过率</div><div class="num">{{ stats.pass_rate }}%</div>
+        </div></div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-8">
+        <div class="card h-100">
+            <div class="card-header">业务量趋势（{{ start|date:'m-d' }} ~ {{ end|date:'m-d' }}）</div>
+            <div class="card-body"><div id="trend" style="height:320px"></div></div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card h-100">
+            <div class="card-header">栏目文章分布</div>
+            <div class="card-body"><div id="catPie" style="height:320px"></div></div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card h-100">
+            <div class="card-header">咨询类型占比</div>
+            <div class="card-body"><div id="typePie" style="height:300px"></div></div>
+        </div>
+    </div>
+    <div class="col-lg-8">
+        <div class="card h-100">
+            <div class="card-header">医师工作量（受理量 / 结案量）</div>
+            <div class="card-body"><div id="workBar" style="height:300px"></div></div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">回复状态分布</div>
+            <div class="card-body"><div id="replyPie" style="height:280px"></div></div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">咨询类型统计表（Pandas groupby）</div>
+            <div class="card-body">
+                <table class="table table-sm mb-0">
+                    <thead><tr><th>咨询类型</th><th>数量</th></tr></thead>
+                    <tbody>
+                    {% for r in table %}
+                        <tr><td>{{ r.类型 }}</td><td><strong>{{ r.数量 }}</strong></td></tr>
+                    {% empty %}
+                        <tr><td colspan="2" class="text-muted">区间内暂无咨询数据</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between">
+                <span>栏目发布率报表</span>
+                <div class="no-print">
+                    <a class="btn btn-sm btn-outline-success" href="{% url 'main_app:export_csv' %}?target=article">导出文章数据</a>
+                    <a class="btn btn-sm btn-outline-secondary" href="{% url 'main_app:print_view' 'article' %}" target="_blank">打印清单</a>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-sm mb-0">
+                    <thead><tr><th>栏目</th><th>文章总数</th><th>已发布</th><th>发布率</th></tr></thead>
+                    <tbody>
+                    {% for r in report_rows %}
+                        <tr>
+                            <td>{{ r.name }}</td><td>{{ r.total }}</td><td>{{ r.pub }}</td>
+                            <td><div class="progress" style="height:16px">
+                                <div class="progress-bar bg-success" style="width:{{ r.rate }}%">{{ r.rate }}%</div>
+                            </div></td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<script>
+const CHART = {{ chart_json|safe }};
+const green = '#2f6b4f', gold = '#b98b3c';
+
+function init(id, option) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const c = echarts.init(el);
+    c.setOption(option);
+    window.addEventListener('resize', () => c.resize());
+}
+
+init('trend', {
+    tooltip: { trigger: 'axis' },
+    legend: { data: ['新增文章', '新增咨询', '新增回复'] },
+    grid: { left: 60, right: 30, top: 46, bottom: 34 },
+    xAxis: { type: 'category', data: CHART.dates },
+    yAxis: { type: 'value', minInterval: 1, splitLine: { lineStyle: { color: '#eef2f0' } } },
+    series: [
+        { name: '新增文章', type: 'line', data: CHART.article_series,
+          itemStyle: { color: green }, lineStyle: { width: 2 }, symbolSize: 6 },
+        { name: '新增咨询', type: 'line', data: CHART.consult_series,
+          itemStyle: { color: gold }, lineStyle: { width: 2 }, symbolSize: 6 },
+        { name: '新增回复', type: 'line', data: CHART.reply_series,
+          itemStyle: { color: '#8fbfa8' }, lineStyle: { width: 2, type: 'dashed' }, symbolSize: 6 }
+    ]
+});
+
+init('catPie', {
+    tooltip: { trigger: 'item' },
+    series: [{
+        type: 'pie', radius: ['40%', '68%'],
+        data: CHART.cat_names.map((n, i) => ({ name: n, value: CHART.cat_values[i] })),
+        label: { formatter: '{b}\n{c}' }
+    }]
+});
+
+init('typePie', {
+    tooltip: { trigger: 'item' },
+    series: [{
+        type: 'pie', radius: '60%',
+        data: CHART.type_names.map((n, i) => ({ name: n, value: CHART.type_values[i] })),
+        label: { formatter: '{b}: {c} ({d}%)' }
+    }]
+});
+
+init('workBar', {
+    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+    legend: { data: ['受理量', '结案量'] },
+    grid: { left: 60, right: 20, top: 40, bottom: 30 },
+    xAxis: { type: 'category', data: CHART.work_names },
+    yAxis: { type: 'value', minInterval: 1 },
+    series: [
+        { name: '受理量', type: 'bar', data: CHART.work_totals, itemStyle: { color: green } },
+        { name: '结案量', type: 'bar', data: CHART.work_done, itemStyle: { color: gold } }
+    ]
+});
+
+init('replyPie', {
+    tooltip: { trigger: 'item' },
+    series: [{
+        type: 'pie', radius: '62%',
+        data: CHART.reply_names.map((n, i) => ({ name: n, value: CHART.reply_values[i] })),
+        label: { formatter: '{b}: {c}' }
+    }]
+});
+</script>
+{% endblock %}

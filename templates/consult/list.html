@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+{% block page_title %}咨询问题管理{% endblock %}
+{% block page_desc %}学生3 ③：多条件记录查询与状态查看（普通用户仅可见本人咨询）{% endblock %}
+{% block page_actions %}
+    <a class="btn btn-success" href="{% url 'main_app:consult_create' %}"><i class="bi bi-plus-lg"></i> 发起咨询</a>
+{% endblock %}
+
+{% block content %}
+<div class="card mb-3">
+    <div class="card-body">
+        <form class="row g-2" method="get">
+            <div class="col-md-3">
+                <input class="form-control" name="kw" value="{{ kw }}" placeholder="编号 / 标题 / 内容 / 提问人">
+            </div>
+            <div class="col-md-2">
+                <select class="form-select" name="status">
+                    <option value="">全部状态</option>
+                    {% for v, l in status_choices %}
+                        <option value="{{ v }}" {% if status == v %}selected{% endif %}>{{ l }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select class="form-select" name="type">
+                    <option value="">全部类型</option>
+                    {% for v, l in type_choices %}
+                        <option value="{{ v }}" {% if ctype == v %}selected{% endif %}>{{ l }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select class="form-select" name="urgency">
+                    <option value="">紧急程度</option>
+                    {% for v, l in urgency_choices %}
+                        <option value="{{ v }}" {% if urgency == v|stringformat:'s' %}selected{% endif %}>{{ l }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% if can_handle %}
+            <div class="col-md-2">
+                <div class="form-check mt-2">
+                    <input class="form-check-input" type="checkbox" name="mine" value="1" id="mine"
+                           {% if mine == '1' %}checked{% endif %}>
+                    <label class="form-check-label small" for="mine">只看我受理的</label>
+                </div>
+            </div>
+            {% endif %}
+            <div class="col-12">
+                <button class="btn btn-success btn-sm"><i class="bi bi-search"></i> 查询</button>
+                <a class="btn btn-outline-secondary btn-sm" href="{% url 'main_app:consult_list' %}">重置</a>
+                <span class="text-muted small ms-2">共 {{ page_obj.paginator.count }} 条</span>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+            <tr>
+                <th>咨询编号</th><th>标题</th><th>类型</th><th>提问人</th>
+                <th>受理人</th><th>紧急</th><th>状态</th><th>提交时间</th><th>操作</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for c in page_obj %}
+                <tr>
+                    <td><code>{{ c.consult_no }}</code></td>
+                    <td>
+                        <a class="text-decoration-none" href="{% url 'main_app:consult_detail' c.pk %}">{{ c.title }}</a>
+                        {% if c.related_article %}<div class="small text-muted">关联文章：{{ c.related_article.title|truncatechars:16 }}</div>{% endif %}
+                    </td>
+                    <td><span class="badge bg-light text-dark border">{{ c.get_consult_type_display }}</span></td>
+                    <td>{{ c.asker_name|default:c.asker.username }}</td>
+                    <td>{{ c.handler.username|default:'—' }}</td>
+                    <td>
+                        {% if c.urgency == 3 %}<span class="badge bg-danger">紧急</span>
+                        {% elif c.urgency == 2 %}<span class="badge bg-warning text-dark">较急</span>
+                        {% else %}<span class="text-muted small">普通</span>{% endif %}
+                    </td>
+                    <td><span class="badge bg-{{ c.status_color }}">{{ c.get_status_display }}</span></td>
+                    <td class="small text-muted">{{ c.created_at|date:'m-d H:i' }}</td>
+                    <td>
+                        <a class="btn btn-sm btn-outline-primary" href="{% url 'main_app:consult_detail' c.pk %}">详情</a>
+                        {% if can_handle %}
+                            <a class="btn btn-sm btn-outline-secondary" href="{% url 'main_app:consult_edit' c.pk %}">维护</a>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="9" class="text-center text-muted py-4">暂无咨询记录</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% include 'includes/pager.html' %}
+{% endblock %}

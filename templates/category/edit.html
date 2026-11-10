@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block page_title %}编辑栏目{% endblock %}
+{% block page_desc %}{{ obj.name }}{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width:640px">
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            {% for f in form %}
+                <div class="mb-3">
+                    <label class="form-label">{{ f.label }}</label>
+                    {{ f }}
+                    {% for e in f.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+                </div>
+            {% endfor %}
+            <button class="btn btn-success">保存</button>
+            <a class="btn btn-outline-secondary" href="{% url 'main_app:category_list' %}">返回</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

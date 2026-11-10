@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+{% block page_title %}回复与审核{% endblock %}
+{% block page_desc %}学生4 ①：任务处理（待回复咨询 · 待审核回复 · 全部历史），并支持状态流程{% endblock %}
+
+{% block content %}
+<div class="row g-3 mb-3">
+    <div class="col-md-4">
+        <div class="card stat-card"><div class="card-body">
+            <div class="text-muted small">待处理咨询</div>
+            <div class="num">{{ stat.pending }}</div>
+        </div></div>
+    </div>
+    <div class="col-md-4">
+        <div class="card stat-card gold"><div class="card-body">
+            <div class="text-muted small">待审核回复</div>
+            <div class="num">{{ stat.review }}</div>
+        </div></div>
+    </div>
+    <div class="col-md-4">
+        <div class="card stat-card"><div class="card-body">
+            <div class="text-muted small">已发布回复</div>
+            <div class="num">{{ stat.done }}</div>
+        </div></div>
+    </div>
+</div>
+
+<ul class="nav nav-tabs mb-3">
+    <li class="nav-item">
+        <a class="nav-link {% if tab == 'task' %}active{% endif %}"
+           href="?tab=task{% if kw %}&kw={{ kw }}{% endif %}">待回复咨询</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {% if tab == 'review' %}active{% endif %}"
+           href="?tab=review{% if kw %}&kw={{ kw }}{% endif %}">待审核回复</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {% if tab == 'history' %}active{% endif %}"
+           href="?tab=history{% if kw %}&kw={{ kw }}{% endif %}">全部回复历史</a>
+    </li>
+</ul>
+
+<form class="row g-2 mb-3" method="get">
+    <input type="hidden" name="tab" value="{{ tab }}">
+    <div class="col-md-4">
+        <input class="form-control" name="kw" value="{{ kw }}" placeholder="咨询编号 / 标题 / 回复编号">
+    </div>
+    <div class="col-md-2"><button class="btn btn-success">查询</button></div>
+</form>
+
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+            {% if tab == 'task' %}
+                <tr><th>咨询编号</th><th>标题</th><th>类型</th><th>提问人</th><th>受理人</th><th>状态</th><th>提交时间</th><th>操作</th></tr>
+            {% else %}
+                <tr><th>回复编号</th><th>对应咨询</th><th>回复人</th><th>状态</th><th>异常</th><th>创建时间</th><th>操作</th></tr>
+            {% endif %}
+            </thead>
+            <tbody>
+            {% for row in page_obj %}
+                {% if tab == 'task' %}
+                    <tr>
+                        <td><code>{{ row.consult_no }}</code></td>
+                        <td><a class="text-decoration-none" href="{% url 'main_app:consult_detail' row.pk %}">{{ row.title|truncatechars:24 }}</a></td>
+                        <td><span class="badge bg-light text-dark border">{{ row.get_consult_type_display }}</span></td>
+                        <td>{{ row.asker_name|default:row.asker.username }}</td>
+                        <td>{{ row.handler.username|default:'未分配' }}</td>
+                        <td><span class="badge bg-{{ row.status_color }}">{{ row.get_status_display }}</span></td>
+                        <td class="small text-muted">{{ row.created_at|date:'m-d H:i' }}</td>
+                        <td>
+                            <a class="btn btn-sm btn-outline-primary" href="{% url 'main_app:consult_detail' row.pk %}">详情</a>
+                            {% if can_reply %}
+                                <a class="btn btn-sm btn-success" href="{% url 'main_app:reply_create' row.pk %}">回复</a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td><code>{{ row.reply_no }}</code></td>
+                        <td>
+                            <a class="text-decoration-none" href="{% url 'main_app:consult_detail' row.consult.pk %}">
+                                {{ row.consult.consult_no }} · {{ row.consult.title|truncatechars:18 }}
+                            </a>
+                        </td>
+                        <td>{{ row.replier.username|default:'—' }}</td>
+                        <td><span class="badge bg-{{ row.status_color }}">{{ row.get_status_display }}</span></td>
+                        <td>{% if row.is_exception %}<span class="badge bg-danger">异常</span>{% else %}—{% endif %}</td>
+                        <td class="small text-muted">{{ row.created_at|date:'m-d H:i' }}</td>
+                        <td><a class="btn btn-sm btn-outline-primary" href="{% url 'main_app:reply_detail' row.pk %}">
+                            {% if tab == 'review' and can_review %}去审核{% else %}查看{% endif %}</a></td>
+                    </tr>
+                {% endif %}
+            {% empty %}
+                <tr><td colspan="8" class="text-center text-muted py-4">暂无数据</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% include 'includes/pager.html' %}
+{% endblock %}

@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+{% block page_title %}综合检索{% endblock %}
+{% block page_desc %}学生5 ①：按时间、人员、业务对象进行多条件联合检索（文章 / 咨询 / 回复 / 日志）{% endblock %}
+
+{% block content %}
+<div class="card mb-3">
+    <div class="card-body">
+        <form class="row g-2" method="get">
+            <div class="col-md-3">
+                <label class="form-label small mb-1">关键字</label>
+                <input class="form-control" name="kw" value="{{ kw }}" placeholder="标题 / 编号 / 内容 / 说明">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small mb-1">业务对象</label>
+                <select class="form-select" name="obj_type">
+                    <option value="">全部对象</option>
+                    {% for v, l in obj_types %}
+                        <option value="{{ v }}" {% if obj_type == v %}selected{% endif %}>{{ l }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small mb-1">操作人员</label>
+                <select class="form-select" name="user_id">
+                    <option value="">不限</option>
+                    {% for u in users %}
+                        <option value="{{ u.pk }}" {% if user_id == u.pk|stringformat:'s' %}selected{% endif %}>{{ u.username }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small mb-1">开始日期</label>
+                <input type="date" class="form-control" name="start" value="{{ start }}">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small mb-1">结束日期</label>
+                <input type="date" class="form-control" name="end" value="{{ end }}">
+            </div>
+            <div class="col-md-1 d-flex align-items-end">
+                <button class="btn btn-success w-100">检索</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if searched %}
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span>检索结果（{{ results|length }} 条，最多显示 200 条）</span>
+        <div class="no-print">
+            <a class="btn btn-sm btn-outline-success"
+               href="{% url 'main_app:export_csv' %}?target=consult&start={{ start }}&end={{ end }}">
+                <i class="bi bi-download"></i> 导出咨询
+            </a>
+            <a class="btn btn-sm btn-outline-secondary" href="{% url 'main_app:log_list' %}">查看操作日志</a>
+        </div>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover table-sm align-middle mb-0">
+            <thead class="table-light">
+            <tr><th>业务类型</th><th>业务编号</th><th>标题 / 说明</th><th>相关人</th><th>状态</th><th>时间</th><th>跳转</th></tr>
+            </thead>
+            <tbody>
+            {% for r in results %}
+                <tr>
+                    <td><span class="badge bg-light text-dark border">{{ r.type }}</span></td>
+                    <td><code>{{ r.no }}</code></td>
+                    <td>{{ r.title|truncatechars:36 }}</td>
+                    <td>{{ r.owner }}</td>
+                    <td>{{ r.status }}</td>
+                    <td class="text-muted small">{{ r.time|date:'Y-m-d H:i' }}</td>
+                    <td><a class="btn btn-sm btn-outline-primary" href="{{ r.url }}">打开</a></td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="7" class="text-center text-muted py-4">没有匹配结果，请调整条件</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+    <div class="card"><div class="card-body text-muted text-center py-5">
+        设置条件后点击「检索」，系统会联合查询 科普文章 / 咨询问题 / 咨询回复 / 操作日志 四张表。
+    </div></div>
+{% endif %}
+{% endblock %}
