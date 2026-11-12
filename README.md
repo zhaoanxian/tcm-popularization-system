@@ -40,7 +40,7 @@
 
 ## 技术栈
 
-- Python 3.10+ / Django 4.x
+- Python 3.10+ / Django 5.2
 - SQLite（默认，开箱即用）；设置 `DB_ENGINE=mysql` 可切换 MySQL
 - Pandas —— 统计分组与聚合
 - ECharts 5 —— 前端图表（CDN 引入）
@@ -78,6 +78,28 @@ python manage.py runserver
 > 仓库中已包含带演示数据的 `db.sqlite3`，克隆后可直接运行。
 > 如需从空库重建演示数据，删除 `db.sqlite3` 后执行 `migrate` + `python manage.py seed_data`。
 
+### Windows 一键启动（推荐）
+
+项目根目录自带 `start.bat`，双击即可，不用敲任何命令：
+
+1. 双击 `start.bat`
+2. 脚本自动完成：找 Python → 装依赖（首次）→ 建库（首次）→ 启动服务
+3. 约 3 秒后自动打开浏览器 <http://127.0.0.1:8000/>
+
+```text
+[OK] Python：.venv\Scripts\python.exe
+[提示] 缺少 Django，正在安装依赖，第一次可能要几分钟...
+[OK] 依赖安装完成
+正在启动，3 秒后自动打开浏览器
+```
+
+几点说明：
+
+- 脚本会自动识别 `.venv` / `venv` / 系统 `python`，不需要改配置。
+- **黑窗口不能关**，关掉窗口服务就停了。
+- 8000 端口被占用时，脚本会提示并直接打开已有地址。
+- 想换端口：右键 `start.bat` → 编辑，把最后一行 `8000` 改成 `8001`。
+
 ### 演示账号（密码统一 `tcm123456`）
 
 | 账号 | 角色 |
@@ -96,6 +118,7 @@ python manage.py runserver
 ```
 tcm-popularization-system/
 ├── manage.py
+├── start.bat                     # Windows 一键启动
 ├── requirements.txt
 ├── db.sqlite3                    # 含演示数据的 SQLite 数据库
 ├── tcm_popularization_website/   # 项目配置
