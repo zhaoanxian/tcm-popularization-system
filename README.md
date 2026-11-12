@@ -73,7 +73,7 @@ python manage.py migrate
 python manage.py runserver
 ```
 
-浏览器打开 <http://127.0.0.1:8000/>
+浏览器打开 `http://127.0.0.1:8000/`
 
 > 仓库中已包含带演示数据的 `db.sqlite3`，克隆后可直接运行。
 > 如需从空库重建演示数据，删除 `db.sqlite3` 后执行 `migrate` + `python manage.py seed_data`。
@@ -84,7 +84,7 @@ python manage.py runserver
 
 1. 双击 `start.bat`
 2. 脚本自动完成：找 Python → 装依赖（首次）→ 建库（首次）→ 启动服务
-3. 约 3 秒后自动打开浏览器 <http://127.0.0.1:8000/>
+3. 约 3 秒后自动打开浏览器 `http://127.0.0.1:8000/`
 
 ```text
 [OK] Python：.venv\Scripts\python.exe
@@ -109,7 +109,7 @@ python manage.py runserver
 | `doctor01` / `doctor02` | 咨询医师 |
 | `user01` / `user02` / `user03` | 普通用户 |
 
-后台管理：<http://127.0.0.1:8000/admin/>
+后台管理：`http://127.0.0.1:8000/admin/`
 
 ---
 
